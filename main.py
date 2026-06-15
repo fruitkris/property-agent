@@ -7,6 +7,7 @@ from flask import Flask, request, jsonify
 API_ID = int(os.environ.get("API_ID"))
 API_HASH = os.environ.get("API_HASH")
 SESSION = os.environ.get("SESSION", "")
+SESSION2 = os.environ.get("SESSION2", "")
 
 app = Flask(__name__)
 
@@ -20,8 +21,10 @@ def get_unit():
    if not code:
        return jsonify({"error": "code required"}), 400
    
+   session = SESSION2 if SESSION2 else SESSION
+   
    async def run():
-       client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
+       client = TelegramClient(StringSession(session), API_ID, API_HASH)
        await client.connect()
        await client.send_message("@PropertyRadarRobot", code)
        await asyncio.sleep(30)
