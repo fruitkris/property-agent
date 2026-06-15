@@ -23,13 +23,15 @@ def get_unit():
    async def run():
        client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
        await client.connect()
-       await client.send_message("me", "тест " + code)
-       await asyncio.sleep(5)
+       await client.send_message("@PropertyRadarRobot", code)
+       await asyncio.sleep(30)
+       msgs = await client.get_messages("@PropertyRadarRobot", limit=1)
+       result = msgs[0].text if msgs else "no response"
        await client.disconnect()
-       return "sent"
+       return result
    
    result = asyncio.run(run())
-   return jsonify({"status": result})
+   return jsonify({"unit": result})
 
 if __name__ == "__main__":
    port = int(os.environ.get("PORT", 8000))
