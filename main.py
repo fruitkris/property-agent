@@ -1,20 +1,34 @@
 import asyncio
 import os
-from telethon import TelegramClient, events
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+from flask import Flask, request, jsonify
+import threading
 
 API_ID = int(os.environ.get("API_ID"))
 API_HASH = os.environ.get("API_HASH")
-SESSION = os.environ.get("SESSION")
+SESSION = os.environ.get("SESSION", "")
 
-client = TelegramClient("session", API_ID, API_HASH)
+app = Flask(__name__)
+client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
 
-async def get_unit_number(url: str) -> str:
-    await client.start()
+@app.route("/get_unit", methods=["POST"])
+async def get_unit():
+    data = request.json
+    url = data.get("url")
+    await client.connect()
     bot = "@PropertyRadarRobot"
     await client.send_message(bot, url)
-    await asyncio.sleep(10)
+    await asyncio.sleep(15)
     messages = await client.get_messages(bot, limit=1)
-    return messages[0].text if messages else "Нет ответа"
+    result = messages[0].text if messages else "Нет ответа"
+    return jsonify({"unit": result})
+
+@app.route("/")
+def index():
+    return "OK"
 
 if __name__ == "__main__":
-    asyncio.run(get_unit_number("test"))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(client.connect())
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
